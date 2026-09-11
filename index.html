@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gym Tracker V3</title>
-  <style>
+    <style>
         :root {
             --bg-color: #000000;
             --surface: #111111;
@@ -13,7 +13,6 @@
             --text-secondary: #a1a1aa;
             --accent: #ffffff;
             --accent-text: #000000;
-            --danger: #ef4444;
         }
 
         body { 
@@ -29,19 +28,9 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        h2 {
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
+        h2 { font-weight: 600; margin-bottom: 2rem; text-align: center; }
 
-        .screen { 
-            display: none; 
-            width: 100%;
-            max-width: 480px;
-            animation: fadeIn 0.3s ease;
-        }
+        .screen { display: none; width: 100%; max-width: 480px; animation: fadeIn 0.3s ease; }
         .screen.active { display: block; }
 
         @keyframes fadeIn {
@@ -50,107 +39,60 @@
         }
 
         button { 
-            display: block;
-            width: 100%; 
-            padding: 1rem; 
-            margin-bottom: 1rem; 
-            font-size: 1rem; 
-            font-weight: 600;
-            cursor: pointer; 
-            border-radius: 8px; 
-            border: 1px solid var(--surface-border); 
-            background: var(--surface); 
-            color: var(--text-primary);
-            transition: all 0.2s ease;
+            display: block; width: 100%; padding: 1rem; margin-bottom: 1rem; 
+            font-size: 1rem; font-weight: 600; cursor: pointer; border-radius: 8px; 
+            border: 1px solid var(--surface-border); background: var(--surface); 
+            color: var(--text-primary); transition: all 0.2s ease;
         }
-
-        button:hover {
-            border-color: var(--text-secondary);
-        }
-
-        button.primary-action {
-            background: var(--accent);
-            color: var(--accent-text);
-            border: none;
-        }
-
-        button.primary-action:hover {
-            opacity: 0.9;
-            transform: scale(0.98);
-        }
-
-        button.secondary { 
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid transparent;
-            margin-top: 2rem;
-        }
-
-        button.secondary:hover {
-            color: var(--text-primary);
-        }
+        button:hover { border-color: var(--text-secondary); }
+        
+        button.primary-action { background: var(--accent); color: var(--accent-text); border: none; }
+        button.primary-action:hover { opacity: 0.9; transform: scale(0.98); }
+        
+        button.secondary { background: transparent; color: var(--text-secondary); border: 1px solid var(--surface-border); }
+        button.secondary:hover { color: var(--text-primary); }
 
         .exercise-card { 
-            background: var(--surface); 
-            padding: 1.5rem; 
-            margin-bottom: 1rem; 
-            border-radius: 12px; 
-            border: 1px solid var(--surface-border);
-            text-align: left; 
-            transition: opacity 0.3s ease;
+            background: var(--surface); padding: 1.5rem; margin-bottom: 1rem; 
+            border-radius: 12px; border: 1px solid var(--surface-border); text-align: left; 
         }
+        .exercise-card h3 { margin: 0 0 0.5rem 0; font-size: 1.1rem; }
 
-        .exercise-card h3 { 
-            margin: 0 0 0.5rem 0; 
-            font-size: 1.1rem;
-            font-weight: 500;
+        /* UI Cerchi per le serie */
+        .sets-indicator { display: flex; gap: 8px; margin: 15px 0; }
+        .set-circle {
+            width: 18px; height: 18px; border-radius: 50%;
+            border: 2px solid var(--accent); background: transparent;
+            transition: background 0.3s ease;
         }
+        .set-circle.filled { background: var(--accent); }
 
-        .exercise-card p {
-            color: var(--text-secondary);
-            margin: 0 0 1rem 0;
-            font-size: 0.9rem;
+        /* Timer a schermo intero */
+        .timer-fullscreen { 
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+            background: var(--bg-color); z-index: 1000; display: none; 
+            flex-direction: column; justify-content: center; align-items: center; 
         }
+        .timer-fullscreen.active { display: flex; }
+        .timer-time { 
+            font-size: 5.5rem; font-weight: bold; font-variant-numeric: tabular-nums; 
+            color: var(--accent); margin-bottom: 3rem; 
+        }
+        .timer-controls { display: flex; gap: 1rem; width: 100%; max-width: 400px; padding: 0 1rem; box-sizing: border-box;}
+        .timer-controls button { margin: 0; }
 
-        .timer-bar { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            width: 100%; 
-            background: rgba(17, 17, 17, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-top: 1px solid var(--surface-border);
-            padding: 1.5rem; 
-            font-size: 1.5rem; 
-            font-weight: 600; 
-            text-align: center;
-            display: none; 
-            box-sizing: border-box; 
-            z-index: 100;
-        }
-
-        #time-display {
-            font-variant-numeric: tabular-nums;
-            color: var(--accent);
-        }
-
-        .completed { 
-            opacity: 0.4; 
-            pointer-events: none;
-        }
+        .completed { opacity: 0.4; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <!-- Schermata 1: Persona -->
+    <!-- Schermate 1 e 2 -->
     <div id="screen-person" class="screen active">
         <h2>Chi si allena oggi?</h2>
         <button onclick="selectPerson('giuseppe')">Giuseppe</button>
         <button onclick="selectPerson('alfonso')">Alfonso</button>
     </div>
 
-    <!-- Schermata 2: Giorno -->
     <div id="screen-day" class="screen">
         <h2>Seleziona il Giorno</h2>
         <button onclick="selectDay(1)">Giorno 1: Upper Body</button>
@@ -159,15 +101,22 @@
         <button class="secondary" onclick="showScreen('screen-person')">Indietro</button>
     </div>
 
-    <!-- Schermata 3: Allenamento -->
+    <!-- Schermata 3 -->
     <div id="screen-workout" class="screen">
         <h2 id="workout-title">Allenamento</h2>
-        <button class="secondary" onclick="showScreen('screen-day')">Cambia Giorno</button>
+        <button class="secondary" onclick="showScreen('screen-day')" style="margin-bottom: 2rem;">Cambia Giorno</button>
         <div id="workout-list"></div>
     </div>
 
-    <!-- Timer Globale -->
-    <div id="global-timer" class="timer-bar">Recupero: <span id="time-display">00:00</span></div>
+    <!-- Timer Schermo Intero -->
+    <div id="timer-fullscreen" class="timer-fullscreen">
+        <h2 style="color: var(--text-secondary);">Recupero</h2>
+        <div id="timer-time" class="timer-time">00:00</div>
+        <div class="timer-controls">
+            <button id="btn-pause" class="secondary" onclick="togglePause()">Pausa</button>
+            <button class="primary-action" onclick="cancelTimer()">Chiudi</button>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>
