@@ -2,17 +2,17 @@ const workouts = {
     giuseppe: {
         1: [
             { name: "Piegamenti (ginocchia a terra)", sets: 3, rest: 90 },
-            { name: "Lat Machine Presa Prona", sets: 3, rest: 90 },
-            { name: "Rematore con Manubrio", sets: 3, rest: 90 },
-            { name: "Chest Press a Macchina", sets: 3, rest: 90 },
+            { name: "Lat Machine Presa Prona", sets: 3, rest: 90, video: "https://www.youtube.com/watch?v=bnSooG_TuRI" },
+            { name: "Rematore con Manubrio", sets: 3, rest: 90, video: "https://www.youtube.com/watch?v=cEr1qVEaS78" },
+            { name: "Chest Press a Macchina", sets: 3, rest: 90, video: "https://www.youtube.com/watch?v=n1Dyy3De1Rc" },
             { name: "Pushdown Tricipiti ai Cavi", sets: 3, rest: 60 }
         ],
         2: [
             { name: "Box Squat a Corpo Libero", sets: 4, rest: 90 },
-            { name: "Leg Press 45°", sets: 3, rest: 90 },
+            { name: "Leg Press 45°", sets: 3, rest: 90, video: "https://www.youtube.com/watch?v=iLCpjOtEOLE" },
             { name: "Leg Curl Seduto", sets: 3, rest: 60 },
             { name: "Calf in Piedi", sets: 3, rest: 60 },
-            { name: "Plank sui gomiti", sets: 4, rest: 60 }
+            { name: "Plank sui gomiti", sets: 4, rest: 60, video: "https://www.youtube.com/watch?v=TDQQ93WtkJM" }
         ],
         3: [
             { name: "Stacchi Rumeni con Manubri", sets: 3, rest: 90 },
@@ -24,18 +24,18 @@ const workouts = {
     },
     alfonso: {
         1: [
-            { name: "Chest Press a Macchina", sets: 3, rest: 90 },
-            { name: "Lat Machine Presa Prona", sets: 3, rest: 90 },
-            { name: "Rematore con Manubrio", sets: 3, rest: 90 },
+            { name: "Chest Press a Macchina", sets: 3, rest: 90, video: "https://www.youtube.com/watch?v=n1Dyy3De1Rc" },
+            { name: "Lat Machine Presa Prona", sets: 3, rest: 90, video: "https://www.youtube.com/watch?v=bnSooG_TuRI" },
+            { name: "Rematore con Manubrio", sets: 3, rest: 90, video: "https://www.youtube.com/watch?v=cEr1qVEaS78" },
             { name: "Alzate Laterali con Manubri", sets: 3, rest: 60 },
             { name: "Pushdown Tricipiti ai Cavi", sets: 3, rest: 60 }
         ],
         2: [
-            { name: "Goblet Squat con Manubrio", sets: 4, rest: 90 },
-            { name: "Leg Press 45°", sets: 3, rest: 90 },
+            { name: "Goblet Squat con Manubrio", sets: 4, rest: 90, video: "https://www.youtube.com/watch?v=s0RDQgB-MJI" },
+            { name: "Leg Press 45°", sets: 3, rest: 90, video: "https://www.youtube.com/watch?v=iLCpjOtEOLE" },
             { name: "Leg Curl Seduto", sets: 3, rest: 60 },
             { name: "Calf in Piedi", sets: 3, rest: 60 },
-            { name: "Plank sui gomiti", sets: 3, rest: 60 }
+            { name: "Plank sui gomiti", sets: 3, rest: 60, video: "https://www.youtube.com/watch?v=TDQQ93WtkJM" }
         ],
         3: [
             { name: "Affondi con Manubri", sets: 3, rest: 90 },
@@ -91,6 +91,20 @@ const workouts = {
     }
 };
 
+let currentPerson = '';
+let currentDay = 1;
+let currentExerciseState = [];
+
+// Variabili Timer
+let activeTimer;
+let timeRemaining = 0;
+let isPaused = false;
+
+function showScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+}
+
 function selectPerson(person) {
     currentPerson = person;
     const container = document.getElementById('day-buttons');
@@ -110,19 +124,6 @@ function selectPerson(person) {
     });
 
     showScreen('screen-day');
-}
-let currentPerson = '';
-let currentDay = 1;
-let currentExerciseState = [];
-
-// Variabili Timer
-let activeTimer;
-let timeRemaining = 0;
-let isPaused = false;
-
-function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(screenId).classList.add('active');
 }
 
 function selectDay(day) {
@@ -152,8 +153,12 @@ function loadWorkout() {
         }
         circlesHTML += '</div>';
         
+        // Genera il link al video se presente
+        const videoHTML = ex.video ? `<a href="${ex.video}" target="_blank" style="color: var(--text-secondary); font-size: 0.9rem; display: inline-block; margin-bottom: 15px; text-decoration: underline;">🎥 Guarda Tutorial</a>` : '';
+        
         card.innerHTML = `
             <h3>${index + 1}. ${ex.name}</h3>
+            ${videoHTML}
             ${circlesHTML}
             ${ex.rest > 0 ? `<button class="primary-action" onclick="completeSet(${index})">Registra Serie & Recupera (${ex.rest}s)</button>` : `<button class="primary-action" onclick="completeSet(${index})">Completa</button>`}
         `;
@@ -164,7 +169,6 @@ function loadWorkout() {
 function completeSet(index) {
     let ex = currentExerciseState[index];
     if (ex.completedSets < ex.sets) {
-        // Colora il cerchio corrispondente
         document.getElementById(`circle-${index}-${ex.completedSets}`).classList.add('filled');
         ex.completedSets++;
         
