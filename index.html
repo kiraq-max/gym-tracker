@@ -87,17 +87,17 @@
 <body>
 
     <!-- Schermate 1 e 2 -->
+<!-- Schermata 1: Persona (Titolo rimosso) -->
     <div id="screen-person" class="screen active">
-        <h2>Chi si allena oggi?</h2>
         <button onclick="selectPerson('giuseppe')">Giuseppe</button>
         <button onclick="selectPerson('alfonso')">Alfonso</button>
+        <button onclick="selectPerson('nando')">Nando</button>
     </div>
 
+    <!-- Schermata 2: Giorno (Generato dinamicamente) -->
     <div id="screen-day" class="screen">
         <h2>Seleziona il Giorno</h2>
-        <button onclick="selectDay(1)">Giorno 1: Upper Body</button>
-        <button onclick="selectDay(2)">Giorno 2: Lower Body & Core</button>
-        <button onclick="selectDay(3)">Giorno 3: Full Body & Cardio</button>
+        <div id="day-buttons"></div>
         <button class="secondary" onclick="showScreen('screen-person')">Indietro</button>
     </div>
 
