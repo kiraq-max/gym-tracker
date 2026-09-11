@@ -1,4 +1,3 @@
-// Dati delle schede[cite: 1, 2]
 const workouts = {
     giuseppe: {
         1: [
@@ -86,7 +85,7 @@ function loadWorkout() {
         card.innerHTML = `
             <h3>${index + 1}. ${ex.name}</h3>
             <p>Serie: <span id="sets-${index}">0</span> / ${ex.sets}</p>
-            ${ex.rest > 0 ? `<button onclick="completeSet(${index})">Registra Serie & Avvia Recupero (${ex.rest}s)</button>` : '<button onclick="completeSet('+index+')">Completa</button>'}
+            ${ex.rest > 0 ? `<button class="primary-action" onclick="completeSet(${index})">Registra Serie & Avvia Recupero (${ex.rest}s)</button>` : `<button class="primary-action" onclick="completeSet(${index})">Completa</button>`}
         `;
         list.appendChild(card);
     });
@@ -124,7 +123,7 @@ function startTimer(seconds) {
         if (time <= 0) {
             clearInterval(activeTimer);
             timerUI.style.display = 'none';
-            navigator.vibrate && navigator.vibrate([200, 100, 200]); // Feedback tattile su mobile
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
         }
         time--;
     }, 1000);
