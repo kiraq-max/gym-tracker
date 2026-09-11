@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Tracker V3</title>
+    <style>
+        body { font-family: system-ui; text-align: center; background: #121212; color: #fff; margin: 0; padding: 1rem; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        button { padding: 1rem; margin: 0.5rem; font-size: 1.1rem; cursor: pointer; border-radius: 8px; border: none; background: #0070f3; color: white; width: 90%; max-width: 400px; }
+        button.secondary { background: #333; }
+        .exercise-card { background: #1e1e1e; padding: 1rem; margin: 1rem auto; border-radius: 8px; max-width: 500px; text-align: left; }
+        .exercise-card h3 { margin-top: 0; }
+        .timer-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #e53e3e; padding: 1rem; font-size: 2rem; font-weight: bold; display: none; box-sizing: border-box; }
+        .completed { opacity: 0.5; }
+    </style>
+</head>
+<body>
+
+    <!-- Schermata 1: Persona -->
+    <div id="screen-person" class="screen active">
+        <h2>Chi si allena oggi?</h2>
+        <button onclick="selectPerson('giuseppe')">Giuseppe</button>
+        <button onclick="selectPerson('alfonso')">Alfonso</button>
+    </div>
+
+    <!-- Schermata 2: Giorno -->
+    <div id="screen-day" class="screen">
+        <h2>Seleziona il Giorno</h2>
+        <button onclick="selectDay(1)">Giorno 1: Upper Body</button>
+        <button onclick="selectDay(2)">Giorno 2: Lower Body & Core</button>
+        <button onclick="selectDay(3)">Giorno 3: Full Body & Cardio</button>
+        <button class="secondary" onclick="showScreen('screen-person')">Indietro</button>
+    </div>
+
+    <!-- Schermata 3: Allenamento -->
+    <div id="screen-workout" class="screen">
+        <h2 id="workout-title">Allenamento</h2>
+        <button class="secondary" onclick="showScreen('screen-day')">Cambia Giorno</button>
+        <div id="workout-list"></div>
+    </div>
+
+    <!-- Timer Globale -->
+    <div id="global-timer" class="timer-bar">Recupero: <span id="time-display">00:00</span></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
