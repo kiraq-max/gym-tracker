@@ -96,6 +96,8 @@ let currentDay = 1;
 let currentExerciseState = [];
 let wakeLock = null;
 
+let isFocusMode = false;
+let currentFocusIndex = 0;
 // Variabili Timer
 let activeTimer;
 let timeRemaining = 0;
@@ -176,6 +178,7 @@ function loadWorkout(isRestored) {
     if (!isRestored) {
         const routine = workouts[currentPerson][currentDay];
         currentExerciseState = routine.map(ex => ({ ...ex, completedSets: 0 }));
+        currentFocusIndex = 0; // Azzera l'indice focus
         saveSession();
     }
 
@@ -194,7 +197,6 @@ function loadWorkout(isRestored) {
         
         const videoHTML = ex.video ? `<a href="${ex.video}" target="_blank" style="color: var(--text-secondary); font-size: 0.9rem; display: inline-block; margin-bottom: 10px; text-decoration: underline;">🎥 Guarda Tutorial</a>` : '';
         
-        // Recupera il peso salvato nelle sessioni precedenti
         const savedWeight = localStorage.getItem(`weight_${currentPerson}_${ex.name}`) || '';
         const weightHTML = `
             <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
@@ -213,27 +215,23 @@ function loadWorkout(isRestored) {
         list.appendChild(card);
     });
 
-    const resetBtn = document.createElement('button');
-    resetBtn.className = 'secondary';
-    resetBtn.textContent = 'Termina Allenamento & Azzera Serie';
-    resetBtn.onclick = () => {
-        if(confirm('Sei sicuro di voler resettare i conteggi delle serie? (I carichi rimarranno salvati)')) {
-            clearSession();
-            showScreen('screen-person');
-            if (wakeLock !== null) wakeLock.release();
-        }
-    };
-    list.appendChild(resetBtn);
-}function completeSet(index) {
+    updateFocusView(); // Applica immediatamente la visualizzazione corretta
+}
+function completeSet(index) {
     let ex = currentExerciseState[index];
     if (ex.completedSets < ex.sets) {
         document.getElementById(`circle-${index}-${ex.completedSets}`).classList.add('filled');
         ex.completedSets++;
         
-        saveSession(); // Salva lo stato ogni volta che completi una serie
+        saveSession();
         
         if (ex.completedSets === ex.sets) {
             document.getElementById(`ex-${index}`).classList.add('completed');
+            
+            // Avanzamento automatico in Modalità Focus
+            if (isFocusMode && currentFocusIndex < currentExerciseState.length - 1) {
+                setTimeout(() => nextExercise(), 800); 
+            }
         }
 
         if (ex.rest > 0 && ex.completedSets < ex.sets) {
@@ -297,6 +295,46 @@ window.onload = () => {
         }
     }
 };
+
+function toggleViewMode() {
+    isFocusMode = !isFocusMode;
+    document.getElementById('btn-view-mode').textContent = isFocusMode ? "Lista 📜" : "Focus 🔍";
+    document.getElementById('focus-navigation').style.display = isFocusMode ? 'flex' : 'none';
+    updateFocusView();
+}
+
+function updateFocusView() {
+    const cards = document.querySelectorAll('.exercise-card');
+    cards.forEach((card, index) => {
+        if (isFocusMode) {
+            card.style.display = index === currentFocusIndex ? 'block' : 'none';
+        } else {
+            card.style.display = 'block';
+        }
+    });
+}
+
+function prevExercise() {
+    if (currentFocusIndex > 0) {
+        currentFocusIndex--;
+        updateFocusView();
+    }
+}
+
+function nextExercise() {
+    if (currentFocusIndex < currentExerciseState.length - 1) {
+        currentFocusIndex++;
+        updateFocusView();
+    }
+}
+
+function resetWorkout() {
+    if(confirm('Sei sicuro di voler resettare i conteggi delle serie? (I carichi restano salvati)')) {
+        clearSession();
+        showScreen('screen-person');
+        if (wakeLock !== null) wakeLock.release();
+    }
+}
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js')
         .then(() => console.log('Service Worker registrato con successo.'))

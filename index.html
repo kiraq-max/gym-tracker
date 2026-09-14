@@ -115,21 +115,23 @@
         <button class="secondary" onclick="showScreen('screen-person')">Indietro</button>
     </div>
 
-    <!-- Schermata 3 -->
+   <!-- Schermata 3: Allenamento -->
     <div id="screen-workout" class="screen">
         <h2 id="workout-title">Allenamento</h2>
-        <button class="secondary" onclick="showScreen('screen-day')" style="margin-bottom: 2rem;">Cambia Giorno</button>
-        <div id="workout-list"></div>
-    </div>
-
-    <!-- Timer Schermo Intero -->
-    <div id="timer-fullscreen" class="timer-fullscreen">
-        <h2 style="color: var(--text-secondary);">Recupero</h2>
-        <div id="timer-time" class="timer-time">00:00</div>
-        <div class="timer-controls">
-            <button id="btn-pause" class="secondary" onclick="togglePause()">Pausa</button>
-            <button class="primary-action" onclick="cancelTimer()">Chiudi</button>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+            <button class="secondary" onclick="showScreen('screen-day')" style="margin: 0; width: 50%;">Giorno</button>
+            <button class="secondary" id="btn-view-mode" onclick="toggleViewMode()" style="margin: 0; width: 50%;">Focus 🔍</button>
         </div>
+        
+        <div id="workout-list"></div>
+        
+        <div id="focus-navigation" style="display: none; gap: 10px; margin-top: 1rem;">
+            <button class="secondary" onclick="prevExercise()" style="margin: 0; width: 50%;">⬅️ Prec</button>
+            <button class="secondary" onclick="nextExercise()" style="margin: 0; width: 50%;">Succ ➡️</button>
+        </div>
+        
+        <button class="secondary" style="margin-top: 2rem;" onclick="resetWorkout()">Termina & Azzera</button>
     </div>
 
     <script src="app.js"></script>
