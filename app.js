@@ -94,11 +94,40 @@ const workouts = {
 let currentPerson = '';
 let currentDay = 1;
 let currentExerciseState = [];
+let wakeLock = null;
 
 // Variabili Timer
 let activeTimer;
 let timeRemaining = 0;
 let isPaused = false;
+
+// 1. Gestione Wake Lock
+async function requestWakeLock() {
+    try {
+        if ('wakeLock' in navigator) {
+            wakeLock = await navigator.wakeLock.request('screen');
+        }
+    } catch (err) {
+        console.log(`Wake Lock error: ${err.name}, ${err.message}`);
+    }
+}
+
+// Ricarica il Wake Lock se si cambia scheda e si torna indietro
+document.addEventListener('visibilitychange', () => {
+    if (wakeLock !== null && document.visibilityState === 'visible') {
+        requestWakeLock();
+    }
+});
+
+// 2. Gestione Persistenza
+function saveSession() {
+    const sessionData = { person: currentPerson, day: currentDay, state: currentExerciseState };
+    localStorage.setItem('gymTrackerSession', JSON.stringify(sessionData));
+}
+
+function clearSession() {
+    localStorage.removeItem('gymTrackerSession');
+}
 
 function showScreen(screenId) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -126,34 +155,39 @@ function selectPerson(person) {
     showScreen('screen-day');
 }
 
-function selectDay(day) {
+function selectDay(day, isRestored = false) {
     currentDay = day;
-    loadWorkout();
+    requestWakeLock(); // Richiede lo schermo sempre acceso
+    loadWorkout(isRestored);
     showScreen('screen-workout');
 }
 
-function loadWorkout() {
+function loadWorkout(isRestored) {
     const list = document.getElementById('workout-list');
     list.innerHTML = '';
     const nameStr = currentPerson.charAt(0).toUpperCase() + currentPerson.slice(1);
     document.getElementById('workout-title').textContent = `${nameStr} - Giorno ${currentDay}`;
 
-    const routine = workouts[currentPerson][currentDay];
-    currentExerciseState = routine.map(ex => ({ ...ex, completedSets: 0 }));
+    // Se non stiamo ripristinando una sessione, creiamo lo stato da zero
+    if (!isRestored) {
+        const routine = workouts[currentPerson][currentDay];
+        currentExerciseState = routine.map(ex => ({ ...ex, completedSets: 0 }));
+        saveSession();
+    }
 
     currentExerciseState.forEach((ex, index) => {
         const card = document.createElement('div');
         card.className = 'exercise-card';
         card.id = `ex-${index}`;
         
-        // Genera i cerchi per le serie
+        if (ex.completedSets === ex.sets) card.classList.add('completed');
+        
         let circlesHTML = '<div class="sets-indicator">';
         for(let i = 0; i < ex.sets; i++) {
-            circlesHTML += `<div id="circle-${index}-${i}" class="set-circle"></div>`;
+            circlesHTML += `<div id="circle-${index}-${i}" class="set-circle ${i < ex.completedSets ? 'filled' : ''}"></div>`;
         }
         circlesHTML += '</div>';
         
-        // Genera il link al video se presente
         const videoHTML = ex.video ? `<a href="${ex.video}" target="_blank" style="color: var(--text-secondary); font-size: 0.9rem; display: inline-block; margin-bottom: 15px; text-decoration: underline;">🎥 Guarda Tutorial</a>` : '';
         
         card.innerHTML = `
@@ -164,6 +198,19 @@ function loadWorkout() {
         `;
         list.appendChild(card);
     });
+
+    // Aggiungo un bottone per resettare l'allenamento a fine lista
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'secondary';
+    resetBtn.textContent = 'Termina Allenamento & Azzera Dati';
+    resetBtn.onclick = () => {
+        if(confirm('Sei sicuro di voler resettare l\'allenamento?')) {
+            clearSession();
+            showScreen('screen-person');
+            if (wakeLock !== null) wakeLock.release();
+        }
+    };
+    list.appendChild(resetBtn);
 }
 
 function completeSet(index) {
@@ -171,6 +218,8 @@ function completeSet(index) {
     if (ex.completedSets < ex.sets) {
         document.getElementById(`circle-${index}-${ex.completedSets}`).classList.add('filled');
         ex.completedSets++;
+        
+        saveSession(); // Salva lo stato ogni volta che completi una serie
         
         if (ex.completedSets === ex.sets) {
             document.getElementById(`ex-${index}`).classList.add('completed');
@@ -182,7 +231,7 @@ function completeSet(index) {
     }
 }
 
-// Logica Timer a Schermo Intero
+// (Tutta la logica del timer rimane invariata)
 function startTimer(seconds) {
     clearInterval(activeTimer);
     timeRemaining = seconds;
@@ -197,9 +246,7 @@ function startTimer(seconds) {
             timeRemaining--;
             updateTimerDisplay();
             
-            if (timeRemaining <= 0) {
-                endTimer();
-            }
+            if (timeRemaining <= 0) endTimer();
         }
     }, 1000);
 }
@@ -216,12 +263,32 @@ function togglePause() {
     document.getElementById('btn-pause').textContent = isPaused ? "Riprendi" : "Pausa";
 }
 
-function cancelTimer() {
-    endTimer();
-}
+function cancelTimer() { endTimer(); }
 
 function endTimer() {
     clearInterval(activeTimer);
     document.getElementById('timer-fullscreen').classList.remove('active');
     if(timeRemaining <= 0 && navigator.vibrate) navigator.vibrate([200, 100, 200]);
 }
+
+// 3. Ripristino Sessione al caricamento della pagina
+window.onload = () => {
+    const saved = localStorage.getItem('gymTrackerSession');
+    if (saved) {
+        const data = JSON.parse(saved);
+        if (confirm(`Hai un allenamento in sospeso per ${data.person.charAt(0).toUpperCase() + data.person.slice(1)}. Vuoi riprenderlo?`)) {
+            currentPerson = data.person;
+            currentExerciseState = data.state;
+            selectPerson(data.person);
+            selectDay(data.day, true);
+        } else {
+            clearSession();
+        }
+    }
+};
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('Service Worker registrato con successo.'))
+        .catch((err) => console.log('Errore Service Worker:', err));
+}
+
