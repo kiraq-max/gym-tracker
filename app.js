@@ -162,13 +162,17 @@ function selectDay(day, isRestored = false) {
     showScreen('screen-workout');
 }
 
+// Funzione per salvare il peso in memoria per l'allenamento successivo
+function saveWeight(person, exerciseName, value) {
+    localStorage.setItem(`weight_${person}_${exerciseName}`, value);
+}
+
 function loadWorkout(isRestored) {
     const list = document.getElementById('workout-list');
     list.innerHTML = '';
     const nameStr = currentPerson.charAt(0).toUpperCase() + currentPerson.slice(1);
     document.getElementById('workout-title').textContent = `${nameStr} - Giorno ${currentDay}`;
 
-    // Se non stiamo ripristinando una sessione, creiamo lo stato da zero
     if (!isRestored) {
         const routine = workouts[currentPerson][currentDay];
         currentExerciseState = routine.map(ex => ({ ...ex, completedSets: 0 }));
@@ -188,32 +192,39 @@ function loadWorkout(isRestored) {
         }
         circlesHTML += '</div>';
         
-        const videoHTML = ex.video ? `<a href="${ex.video}" target="_blank" style="color: var(--text-secondary); font-size: 0.9rem; display: inline-block; margin-bottom: 15px; text-decoration: underline;">🎥 Guarda Tutorial</a>` : '';
+        const videoHTML = ex.video ? `<a href="${ex.video}" target="_blank" style="color: var(--text-secondary); font-size: 0.9rem; display: inline-block; margin-bottom: 10px; text-decoration: underline;">🎥 Guarda Tutorial</a>` : '';
         
+        // Recupera il peso salvato nelle sessioni precedenti
+        const savedWeight = localStorage.getItem(`weight_${currentPerson}_${ex.name}`) || '';
+        const weightHTML = `
+            <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                <label style="color: var(--text-secondary); font-size: 0.9rem;">Carico (kg):</label>
+                <input type="number" inputmode="decimal" value="${savedWeight}" placeholder="Es. 50" onchange="saveWeight('${currentPerson}', '${ex.name}', this.value)" style="background: var(--bg-color); color: var(--text-primary); border: 1px solid var(--surface-border); padding: 8px; border-radius: 6px; width: 80px; font-size: 1rem;">
+            </div>
+        `;
+
         card.innerHTML = `
             <h3>${index + 1}. ${ex.name}</h3>
             ${videoHTML}
+            ${weightHTML}
             ${circlesHTML}
             ${ex.rest > 0 ? `<button class="primary-action" onclick="completeSet(${index})">Registra Serie & Recupera (${ex.rest}s)</button>` : `<button class="primary-action" onclick="completeSet(${index})">Completa</button>`}
         `;
         list.appendChild(card);
     });
 
-    // Aggiungo un bottone per resettare l'allenamento a fine lista
     const resetBtn = document.createElement('button');
     resetBtn.className = 'secondary';
-    resetBtn.textContent = 'Termina Allenamento & Azzera Dati';
+    resetBtn.textContent = 'Termina Allenamento & Azzera Serie';
     resetBtn.onclick = () => {
-        if(confirm('Sei sicuro di voler resettare l\'allenamento?')) {
+        if(confirm('Sei sicuro di voler resettare i conteggi delle serie? (I carichi rimarranno salvati)')) {
             clearSession();
             showScreen('screen-person');
             if (wakeLock !== null) wakeLock.release();
         }
     };
     list.appendChild(resetBtn);
-}
-
-function completeSet(index) {
+}function completeSet(index) {
     let ex = currentExerciseState[index];
     if (ex.completedSets < ex.sets) {
         document.getElementById(`circle-${index}-${ex.completedSets}`).classList.add('filled');
